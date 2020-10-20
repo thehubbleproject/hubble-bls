@@ -13,7 +13,7 @@ async function init() {
 }
 exports.init = init;
 function setDomain(domain) {
-    DOMAIN = utils_1.arrayify(domain);
+    DOMAIN = utils_1.toUtf8Bytes(domain);
 }
 exports.setDomain = setDomain;
 function setDomainHex(domain) {
@@ -24,7 +24,7 @@ function setDomainHex(domain) {
 }
 exports.setDomainHex = setDomainHex;
 function hashToPoint(msg) {
-    if (!ethers_1.ethers.utils.isHexString(msg)) {
+    if (!utils_1.isHexString(msg)) {
         throw new Error("message is expected to be hex string");
     }
     const _msg = utils_1.arrayify(msg);
