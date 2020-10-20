@@ -1,0 +1,17 @@
+{
+  "name": "hubble-bls",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rm -rf dist/ && tsc"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^14.14.0",
+    "ethers": "^5.0.18",
+    "mcl-wasm": "^0.4.5"
+  }
+}
