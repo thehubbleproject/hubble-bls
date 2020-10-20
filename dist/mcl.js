@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.randG2 = exports.randG1 = exports.randFr = exports.newG2 = exports.newG1 = exports.aggreagate = exports.sign = exports.newKeyPair = exports.g2ToHex = exports.g1ToHex = exports.g2 = exports.g1 = exports.toBigEndian = exports.mapToPoint = exports.hashToPoint = exports.setDomainHex = exports.setDomain = exports.init = exports.FIELD_ORDER = void 0;
+exports.getMclInstance = exports.randG2 = exports.randG1 = exports.randFr = exports.newG2 = exports.newG1 = exports.aggreagate = exports.sign = exports.newKeyPair = exports.g2ToHex = exports.g1ToHex = exports.g2 = exports.g1 = exports.toBigEndian = exports.mapToPoint = exports.hashToPoint = exports.setDomainHex = exports.setDomain = exports.init = exports.FIELD_ORDER = void 0;
 const mcl = require("mcl-wasm");
 const ethers_1 = require("ethers");
 const hashToField_1 = require("./hashToField");
@@ -132,4 +132,5 @@ function randG2() {
     return g2ToHex(p);
 }
 exports.randG2 = randG2;
+exports.getMclInstance = () => mcl;
 //# sourceMappingURL=mcl.js.map
