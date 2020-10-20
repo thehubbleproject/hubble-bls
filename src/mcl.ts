@@ -1,7 +1,7 @@
 const mcl = require("mcl-wasm");
-import { BigNumber, ethers } from "ethers";
+import { BigNumber } from "ethers";
 import { hashToField } from "./hashToField";
-import { arrayify, hexlify, randomBytes } from "ethers/lib/utils";
+import { arrayify, hexlify, randomBytes, toUtf8Bytes, isHexString } from "ethers/lib/utils";
 
 
 export const FIELD_ORDER = BigNumber.from(
@@ -33,7 +33,7 @@ export async function init() {
 }
 
 export function setDomain(domain: string) {
-    DOMAIN = arrayify(domain);
+    DOMAIN = toUtf8Bytes(domain);
 }
 
 export function setDomainHex(domain: string) {
@@ -44,7 +44,7 @@ export function setDomainHex(domain: string) {
 }
 
 export function hashToPoint(msg: string): mclG1 {
-    if (!ethers.utils.isHexString(msg)) {
+    if (!isHexString(msg)) {
         throw new Error("message is expected to be hex string");
     }
 
