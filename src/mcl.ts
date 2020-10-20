@@ -1,8 +1,13 @@
 const mcl = require("mcl-wasm");
 import { BigNumber } from "ethers";
 import { hashToField } from "./hashToField";
-import { arrayify, hexlify, randomBytes, toUtf8Bytes, isHexString } from "ethers/lib/utils";
-
+import {
+    arrayify,
+    hexlify,
+    randomBytes,
+    toUtf8Bytes,
+    isHexString,
+} from "ethers/lib/utils";
 
 export const FIELD_ORDER = BigNumber.from(
     "0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47"
@@ -143,7 +148,7 @@ export function newG2(): solG2 {
 }
 
 export function randFr(): mclFR {
-    const r =  hexlify(randomBytes(12));
+    const r = hexlify(randomBytes(12));
     let fr = new mcl.Fr();
     fr.setHashOf(r);
     return fr;
