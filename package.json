@@ -8,7 +8,8 @@
     "build": "rm -rf dist/ && tsc",
     "test": "mocha -r ts-node/register test/**/*.test.ts",
     "lint": "prettier --check .",
-    "prettier": "prettier --write ."
+    "prettier": "prettier --write .",
+    "publish": "npm publish --access public"
   },
   "author": "",
   "license": "MIT",
