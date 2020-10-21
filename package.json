@@ -1,6 +1,6 @@
 {
   "name": "@thehubbleproject/bls",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,6 +11,7 @@
     "prettier": "prettier --write .",
     "publish": "npm publish --access public"
   },
+  "homepage": "https://github.com/thehubbleproject/hubble-bls",
   "author": "",
   "license": "MIT",
   "dependencies": {
