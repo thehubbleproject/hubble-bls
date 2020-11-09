@@ -6,3 +6,7 @@ Goal
 
 - To be compatible with hubble BLS contracts
 - Support browser applications
+
+## Getting started
+
+See `test/mcl.test.ts` for sample usage.
