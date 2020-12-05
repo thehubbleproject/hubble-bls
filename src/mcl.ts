@@ -88,6 +88,14 @@ export function g2(): mclG2 {
     return g2;
 }
 
+export function negativeG2(): mclG2 {
+    const g2 = new mcl.G2();
+    g2.setStr(
+        "1 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2 0x1d9befcd05a5323e6da4d435f3b617cdb3af83285c2df711ef39c01571827f9d 0x275dc4a288d1afb3cbb1ac09187524c7db36395df7be3b99e673b13a075a65ec"
+    );
+    return g2;
+}
+
 export function g1ToHex(p: mclG1): solG1 {
     p.normalize();
     const x = hexlify(toBigEndian(p.getX()));
@@ -128,6 +136,43 @@ export function sign(
     return { signature, M };
 }
 
+export function verify(
+    signature: solG1,
+    pubkey: solG2,
+    message: Message
+): boolean {
+    const negG2 = new mcl.PrecomputedG2(negativeG2());
+    const messageG1 = parseG1(message);
+    const pubkeyG2 = parseG2(pubkey);
+    const pairings = mcl.precomputedMillerLoop2mixed(
+        messageG1,
+        pubkeyG2,
+        signature,
+        negG2
+    );
+    return mcl.finalExp(pairings).isOne();
+}
+
+export function verifyMultiple(
+    aggSignature: solG1,
+    pubkeys: solG2[],
+    messages: Message[]
+): boolean {
+    const size = pubkeys.length;
+    if (size === 0) throw Error("number of public key is zero");
+    if (size != messages.length)
+        throw Error("number of public keys and messages must be equal");
+    const negG2 = new mcl.PrecomputedG2(negativeG2());
+    const mclAggSignature = parseG1(aggSignature);
+    let accumulator = mcl.precomputedMillerLoop(mclAggSignature, negG2);
+    for (let i = 0; i < size; i++) {
+        const messageG1 = parseG1(messages[i]);
+        const pubkeyG2 = parseG2(pubkeys[i]);
+        accumulator = mcl.mul(accumulator, mcl.millerLoop(messageG1, pubkeyG2));
+    }
+    return mcl.finalExp(accumulator).isOne();
+}
+
 export function aggreagate(signatures: Signature[]): solG1 {
     let aggregated = new mcl.G1();
     for (const sig of signatures) {
@@ -154,15 +199,38 @@ export function randFr(): mclFR {
     return fr;
 }
 
-export function randG1(): solG1 {
+export function randMclG1(): mclG1 {
     const p = mcl.mul(g1(), randFr());
     p.normalize();
-    return g1ToHex(p);
+    return p;
+}
+
+export function randMclG2(): mclG2 {
+    const p = mcl.mul(g2(), randFr());
+    p.normalize();
+    return p;
+}
+
+export function randG1(): solG1 {
+    return g1ToHex(randMclG1());
 }
 
 export function randG2(): solG2 {
-    const p = mcl.mul(g2(), randFr());
-    p.normalize();
-    return g2ToHex(p);
+    return g2ToHex(randMclG2());
 }
+
+export function parseG1(solG1: solG1): mclG1 {
+    const g1 = new mcl.G1();
+    const [x, y] = solG1;
+    g1.setStr(`1 ${x} ${y}`, 16);
+    return g1;
+}
+
+export function parseG2(solG2: solG2): mclG2 {
+    const g2 = new mcl.G2();
+    const [x0, x1, y0, y1] = solG2;
+    g2.setStr(`1 ${x0} ${x1} ${y0} ${y1}`);
+    return g2;
+}
+
 export const getMclInstance = () => mcl;
