@@ -18,6 +18,8 @@ export class MismatchLength extends MclError {}
 
 export class BadMessage extends MclError {}
 
+export class BadHex extends MclError {}
+
 // SignerError
 
 export class NullSigner extends SignerError {}

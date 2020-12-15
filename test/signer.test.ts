@@ -15,10 +15,13 @@ describe("BLS Signer", async () => {
 
         // The `new` method creates a key pair
         const signer = await BlsSigner.getSigner(DOMAIN);
+        // Signer can also be initiated with an existing secret
+        const signer2 = await BlsSigner.getSigner(DOMAIN, "0xabcd");
 
         const signature = signer.sign(message);
 
         assert.isTrue(signer.verify(signature, signer.pubkey, message));
+        assert.isFalse(signer.verify(signature, signer2.pubkey, message));
     });
     it("verify aggregated signature", async function () {
         const rawMessages = ["Hello", "how", "are", "you"];

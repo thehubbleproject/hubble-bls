@@ -4,6 +4,7 @@ import { hashToField } from "./hashToField";
 import { arrayify, hexlify, randomBytes, isHexString } from "ethers/lib/utils";
 import {
     BadDomain,
+    BadHex,
     BadMessage,
     EmptyArray,
     MismatchLength,
@@ -202,6 +203,13 @@ export function randG1(): solG1 {
 
 export function randG2(): solG2 {
     return g2ToHex(randMclG2());
+}
+
+export function parseFr(hex: string) {
+    if (!isHexString(hex)) throw new BadHex(`Expect hex but got ${hex}`);
+    const fr = new mcl.Fr();
+    fr.setHashOf(hex);
+    return fr;
 }
 
 export function parseG1(solG1: solG1): mclG1 {
