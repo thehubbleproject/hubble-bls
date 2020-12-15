@@ -16,6 +16,7 @@ import {
     verifyRaw,
     verifyMultipleRaw,
     hashToPoint,
+    init,
 } from "./mcl";
 
 export interface BlsSignerInterface {
@@ -72,7 +73,8 @@ export class BlsVerifier {
 }
 
 export class BlsSigner extends BlsVerifier implements BlsSignerInterface {
-    static new(domain: Domain) {
+    static async getSigner(domain: Domain) {
+        await init();
         const secret = randFr();
         return new BlsSigner(domain, secret);
     }
