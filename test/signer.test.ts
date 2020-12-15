@@ -2,20 +2,18 @@ import { assert } from "chai";
 import { arrayify, formatBytes32String, keccak256 } from "ethers/lib/utils";
 import { aggregate, BlsSigner } from "../src/signer";
 
-// This is the raw API, it is not recommended to use it directly in your application
-
 describe("BLS Signer", async () => {
     // Domain is a data that signer and verifier must agree on
     // A verifier considers a signature invalid if it is signed with a different domain
     const DOMAIN = arrayify(keccak256("0x1234ABCD"));
 
     it("verify single signature", async function () {
-        // mcl.sign takes hex string as input, so the raw string needs to be encoded
+        // message should be a hex string
         const message = formatBytes32String("Hello");
 
-        // The `new` method creates a key pair
+        // A signer can be instantiate with new key pair generated
         const signer = await BlsSigner.getSigner(DOMAIN);
-        // Signer can also be initiated with an existing secret
+        // ... or with an existing secret
         const signer2 = await BlsSigner.getSigner(DOMAIN, "0xabcd");
 
         const signature = signer.sign(message);
