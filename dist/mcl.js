@@ -1,34 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMclInstance = exports.randG2 = exports.randG1 = exports.randFr = exports.newG2 = exports.newG1 = exports.aggreagate = exports.sign = exports.newKeyPair = exports.g2ToHex = exports.g1ToHex = exports.g2 = exports.g1 = exports.toBigEndian = exports.mapToPoint = exports.hashToPoint = exports.setDomainHex = exports.setDomain = exports.init = exports.FIELD_ORDER = void 0;
+exports.getMclInstance = exports.parseG2 = exports.parseG1 = exports.parseFr = exports.randG2 = exports.randG1 = exports.randMclG2 = exports.randMclG1 = exports.randFr = exports.aggregateRaw = exports.verifyMultipleRaw = exports.verifyRaw = exports.sign = exports.newKeyPair = exports.getPubkey = exports.g2ToHex = exports.g1ToHex = exports.negativeG2 = exports.g2 = exports.g1 = exports.toBigEndian = exports.mapToPoint = exports.hashToPoint = exports.validateDomain = exports.init = exports.FIELD_ORDER = void 0;
 const mcl = require("mcl-wasm");
 const ethers_1 = require("ethers");
 const hashToField_1 = require("./hashToField");
 const utils_1 = require("ethers/lib/utils");
+const exceptions_1 = require("./exceptions");
 exports.FIELD_ORDER = ethers_1.BigNumber.from("0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47");
-let DOMAIN;
 async function init() {
     await mcl.init(mcl.BN_SNARK1);
-    mcl.setMapToMode(0);
+    mcl.setMapToMode(mcl.BN254);
 }
 exports.init = init;
-function setDomain(domain) {
-    DOMAIN = utils_1.toUtf8Bytes(domain);
+function validateDomain(domain) {
+    if (domain.length != 32)
+        throw new exceptions_1.BadDomain(`Expect 32 bytes but got ${domain.length}`);
 }
-exports.setDomain = setDomain;
-function setDomainHex(domain) {
-    DOMAIN = utils_1.arrayify(domain);
-    if (DOMAIN.length != 32) {
-        throw new Error("bad domain length");
-    }
-}
-exports.setDomainHex = setDomainHex;
-function hashToPoint(msg) {
-    if (!utils_1.isHexString(msg)) {
-        throw new Error("message is expected to be hex string");
-    }
+exports.validateDomain = validateDomain;
+function hashToPoint(msg, domain) {
+    if (!utils_1.isHexString(msg))
+        throw new exceptions_1.BadMessage(`Expect hex string but got ${msg}`);
     const _msg = utils_1.arrayify(msg);
-    const [e0, e1] = hashToField_1.hashToField(DOMAIN, _msg, 2);
+    const [e0, e1] = hashToField_1.hashToField(domain, _msg, 2);
     const p0 = mapToPoint(e0);
     const p1 = mapToPoint(e1);
     const p = mcl.add(p0, p1);
@@ -60,6 +53,12 @@ function g2() {
     return g2;
 }
 exports.g2 = g2;
+function negativeG2() {
+    const g2 = new mcl.G2();
+    g2.setStr("1 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2 0x1d9befcd05a5323e6da4d435f3b617cdb3af83285c2df711ef39c01571827f9d 0x275dc4a288d1afb3cbb1ac09187524c7db36395df7be3b99e673b13a075a65ec");
+    return g2;
+}
+exports.negativeG2 = negativeG2;
 function g1ToHex(p) {
     p.normalize();
     const x = utils_1.hexlify(toBigEndian(p.getX()));
@@ -78,41 +77,54 @@ function g2ToHex(p) {
     return [x0, x1, y0, y1];
 }
 exports.g2ToHex = g2ToHex;
+function getPubkey(secret) {
+    const pubkey = mcl.mul(g2(), secret);
+    pubkey.normalize();
+    return pubkey;
+}
+exports.getPubkey = getPubkey;
 function newKeyPair() {
     const secret = randFr();
-    const mclPubkey = mcl.mul(g2(), secret);
-    mclPubkey.normalize();
-    const pubkey = g2ToHex(mclPubkey);
+    const pubkey = getPubkey(secret);
     return { pubkey, secret };
 }
 exports.newKeyPair = newKeyPair;
-function sign(message, secret) {
-    const messagePoint = hashToPoint(message);
+function sign(message, secret, domain) {
+    const messagePoint = hashToPoint(message, domain);
     const signature = mcl.mul(messagePoint, secret);
     signature.normalize();
-    const M = g1ToHex(messagePoint);
-    return { signature, M };
+    return { signature, messagePoint };
 }
 exports.sign = sign;
-function aggreagate(signatures) {
+function verifyRaw(signature, pubkey, message) {
+    const negG2 = new mcl.PrecomputedG2(negativeG2());
+    const pairings = mcl.precomputedMillerLoop2mixed(message, pubkey, signature, negG2);
+    return mcl.finalExp(pairings).isOne();
+}
+exports.verifyRaw = verifyRaw;
+function verifyMultipleRaw(aggSignature, pubkeys, messages) {
+    const size = pubkeys.length;
+    if (size === 0)
+        throw new exceptions_1.EmptyArray("number of public key is zero");
+    if (size != messages.length)
+        throw new exceptions_1.MismatchLength(`public keys ${size}; messages ${messages.length}`);
+    const negG2 = new mcl.PrecomputedG2(negativeG2());
+    let accumulator = mcl.precomputedMillerLoop(aggSignature, negG2);
+    for (let i = 0; i < size; i++) {
+        accumulator = mcl.mul(accumulator, mcl.millerLoop(messages[i], pubkeys[i]));
+    }
+    return mcl.finalExp(accumulator).isOne();
+}
+exports.verifyMultipleRaw = verifyMultipleRaw;
+function aggregateRaw(signatures) {
     let aggregated = new mcl.G1();
     for (const sig of signatures) {
         aggregated = mcl.add(aggregated, sig);
     }
     aggregated.normalize();
-    return g1ToHex(aggregated);
+    return aggregated;
 }
-exports.aggreagate = aggreagate;
-function newG1() {
-    const g1 = new mcl.G1();
-    return g1ToHex(g1);
-}
-exports.newG1 = newG1;
-function newG2() {
-    const g2 = new mcl.G2();
-    return g2ToHex(g2);
-}
-exports.newG2 = newG2;
+exports.aggregateRaw = aggregateRaw;
 function randFr() {
     const r = utils_1.hexlify(utils_1.randomBytes(12));
     let fr = new mcl.Fr();
@@ -120,17 +132,48 @@ function randFr() {
     return fr;
 }
 exports.randFr = randFr;
-function randG1() {
+function randMclG1() {
     const p = mcl.mul(g1(), randFr());
     p.normalize();
-    return g1ToHex(p);
+    return p;
+}
+exports.randMclG1 = randMclG1;
+function randMclG2() {
+    const p = mcl.mul(g2(), randFr());
+    p.normalize();
+    return p;
+}
+exports.randMclG2 = randMclG2;
+function randG1() {
+    return g1ToHex(randMclG1());
 }
 exports.randG1 = randG1;
 function randG2() {
-    const p = mcl.mul(g2(), randFr());
-    p.normalize();
-    return g2ToHex(p);
+    return g2ToHex(randMclG2());
 }
 exports.randG2 = randG2;
-exports.getMclInstance = () => mcl;
+function parseFr(hex) {
+    if (!utils_1.isHexString(hex))
+        throw new exceptions_1.BadHex(`Expect hex but got ${hex}`);
+    const fr = new mcl.Fr();
+    fr.setHashOf(hex);
+    return fr;
+}
+exports.parseFr = parseFr;
+function parseG1(solG1) {
+    const g1 = new mcl.G1();
+    const [x, y] = solG1;
+    g1.setStr(`1 ${x} ${y}`, 16);
+    return g1;
+}
+exports.parseG1 = parseG1;
+function parseG2(solG2) {
+    const g2 = new mcl.G2();
+    const [x0, x1, y0, y1] = solG2;
+    g2.setStr(`1 ${x0} ${x1} ${y0} ${y1}`);
+    return g2;
+}
+exports.parseG2 = parseG2;
+const getMclInstance = () => mcl;
+exports.getMclInstance = getMclInstance;
 //# sourceMappingURL=mcl.js.map

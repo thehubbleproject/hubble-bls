@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.expandMsg = exports.hashToField = exports.FIELD_ORDER = void 0;
 const ethers_1 = require("ethers");
 const utils_1 = require("ethers/lib/utils");
+const exceptions_1 = require("./exceptions");
 exports.FIELD_ORDER = ethers_1.BigNumber.from("0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47");
 function hashToField(domain, msg, count) {
     const u = 48;
@@ -16,9 +17,8 @@ function hashToField(domain, msg, count) {
 }
 exports.hashToField = hashToField;
 function expandMsg(domain, msg, outLen) {
-    if (domain.length > 32) {
-        throw new Error("bad domain size");
-    }
+    if (domain.length > 32)
+        throw new exceptions_1.BadDomain(`Expect 32 bytes but got ${domain.length}`);
     const out = new Uint8Array(outLen);
     const len0 = 64 + msg.length + 2 + 1 + domain.length + 1;
     const in0 = new Uint8Array(len0);
