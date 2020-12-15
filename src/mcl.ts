@@ -2,6 +2,12 @@ const mcl = require("mcl-wasm");
 import { BigNumber } from "ethers";
 import { hashToField } from "./hashToField";
 import { arrayify, hexlify, randomBytes, isHexString } from "ethers/lib/utils";
+import {
+    BadDomain,
+    BadMessage,
+    EmptyArray,
+    MismatchLength,
+} from "./exceptions";
 
 export const FIELD_ORDER = BigNumber.from(
     "0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47"
@@ -32,15 +38,13 @@ export async function init() {
 }
 
 export function validateDomain(domain: Domain) {
-    if (domain.length != 32) {
-        throw new Error("bad domain length");
-    }
+    if (domain.length != 32)
+        throw new BadDomain(`Expect 32 bytes but got ${domain.length}`);
 }
 
 export function hashToPoint(msg: string, domain: Domain): MessagePoint {
-    if (!isHexString(msg)) {
-        throw new Error("message is expected to be hex string");
-    }
+    if (!isHexString(msg))
+        throw new BadMessage(`Expect hex string but got ${msg}`);
 
     const _msg = arrayify(msg);
     const [e0, e1] = hashToField(domain, _msg, 2);
@@ -148,9 +152,11 @@ export function verifyMultipleRaw(
     messages: MessagePoint[]
 ): boolean {
     const size = pubkeys.length;
-    if (size === 0) throw Error("number of public key is zero");
+    if (size === 0) throw new EmptyArray("number of public key is zero");
     if (size != messages.length)
-        throw Error("number of public keys and messages must be equal");
+        throw new MismatchLength(
+            `public keys ${size}; messages ${messages.length}`
+        );
     const negG2 = new mcl.PrecomputedG2(negativeG2());
     let accumulator = mcl.precomputedMillerLoop(aggSignature, negG2);
     for (let i = 0; i < size; i++) {

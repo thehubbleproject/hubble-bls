@@ -1,3 +1,4 @@
+import { NullSigner } from "./exceptions";
 import {
     solG2,
     Domain,
@@ -28,22 +29,23 @@ export interface BlsSignerInterface {
     ): boolean;
 }
 
+// Useful when your real signer is not loaded but need a placeholder
 export class NullBlsSinger implements BlsSignerInterface {
     get pubkey(): solG2 {
-        throw new Error("NullBlsSinger has no public key");
+        throw new NullSigner("NullSinger has no public key");
     }
     sign(message: string): solG1 {
-        throw new Error("NullBlsSinger dosen't sign");
+        throw new NullSigner("NullSinger dosen't sign");
     }
     verify(signature: solG1, pubkey: solG2, message: string): boolean {
-        throw new Error("NullBlsSinger dosen't verify");
+        throw new NullSigner("NullSinger dosen't verify");
     }
     verifyMultiple(
         aggSignature: solG1,
         pubkeys: solG2[],
         messages: string[]
     ): boolean {
-        throw new Error("NullBlsSinger dosen't verify");
+        throw new NullSigner("NullSinger dosen't verify");
     }
 }
 
