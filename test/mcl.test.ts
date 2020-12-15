@@ -1,15 +1,16 @@
 import { assert } from "chai";
-import { formatBytes32String, keccak256 } from "ethers/lib/utils";
+import { arrayify, formatBytes32String, keccak256 } from "ethers/lib/utils";
 import * as mcl from "../src/mcl";
 
-describe("BLS", async () => {
+// This is the raw API, it is not recommended to use it directly in your application
+
+describe("BLS raw API", async () => {
+    // Domain is a data that signer and verifier must agree on
+    // A verifier considers a signature invalid if it is signed with a different domain
+    const DOMAIN = arrayify(keccak256("0x1234ABCD"));
     before(async function () {
         // The libaray needs to be inititalized before using it
         await mcl.init();
-        // Domain is a data that signer and verifier must agree on
-        // A verifier considers a signature invalid if it is signed with a different domain
-        const DOMAIN_HEX = keccak256("0x1234ABCD");
-        mcl.setDomainHex(DOMAIN_HEX);
     });
     it("parse g1", async function () {
         const mclG1 = mcl.randMclG1();
@@ -24,28 +25,32 @@ describe("BLS", async () => {
         // mcl.sign takes hex string as input, so the raw string needs to be encoded
         const message = formatBytes32String("Hello");
         const { pubkey, secret } = mcl.newKeyPair();
-        const { signature, M } = mcl.sign(message, secret);
+        const { signature, messagePoint } = mcl.sign(message, secret, DOMAIN);
 
         // Note that we use the message produced by mcl.sign
-        assert.isTrue(mcl.verify(signature, pubkey, M));
+        assert.isTrue(mcl.verifyRaw(signature, pubkey, messagePoint));
 
         const { pubkey: badPubkey } = mcl.newKeyPair();
-        assert.isFalse(mcl.verify(signature, badPubkey, M));
+        assert.isFalse(mcl.verifyRaw(signature, badPubkey, messagePoint));
     });
     it("verify aggregated signature", async function () {
         const rawMessages = ["Hello", "how", "are", "you"];
-        const messages: mcl.Message[] = [];
+        const messages: mcl.MessagePoint[] = [];
         const pubkeys: mcl.PublicKey[] = [];
         const signatures: mcl.Signature[] = [];
         for (const raw of rawMessages) {
             const message = formatBytes32String(raw);
             const { pubkey, secret } = mcl.newKeyPair();
-            const { signature, M } = mcl.sign(message, secret);
-            messages.push(M);
+            const { signature, messagePoint } = mcl.sign(
+                message,
+                secret,
+                DOMAIN
+            );
+            messages.push(messagePoint);
             pubkeys.push(pubkey);
             signatures.push(signature);
         }
-        const aggSignature = mcl.aggreagate(signatures);
-        assert.isTrue(mcl.verifyMultiple(aggSignature, pubkeys, messages));
+        const aggSignature = mcl.aggregateRaw(signatures);
+        assert.isTrue(mcl.verifyMultipleRaw(aggSignature, pubkeys, messages));
     });
 });

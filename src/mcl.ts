@@ -1,13 +1,14 @@
 const mcl = require("mcl-wasm");
 import { BigNumber } from "ethers";
 import { hashToField } from "./hashToField";
+import { arrayify, hexlify, randomBytes, isHexString } from "ethers/lib/utils";
 import {
-    arrayify,
-    hexlify,
-    randomBytes,
-    toUtf8Bytes,
-    isHexString,
-} from "ethers/lib/utils";
+    BadDomain,
+    BadHex,
+    BadMessage,
+    EmptyArray,
+    MismatchLength,
+} from "./exceptions";
 
 export const FIELD_ORDER = BigNumber.from(
     "0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47"
@@ -17,10 +18,10 @@ export type mclG2 = any;
 export type mclG1 = any;
 export type mclFP = any;
 export type mclFR = any;
-export type PublicKey = solG2;
 export type SecretKey = mclFR;
+export type MessagePoint = mclG1;
 export type Signature = mclG1;
-export type Message = solG1;
+export type PublicKey = mclG2;
 
 export type solG1 = [string, string];
 export type solG2 = [string, string, string, string];
@@ -30,31 +31,24 @@ export interface keyPair {
     secret: SecretKey;
 }
 
-let DOMAIN: Uint8Array;
+export type Domain = Uint8Array;
 
 export async function init() {
     await mcl.init(mcl.BN_SNARK1);
-    mcl.setMapToMode(0);
+    mcl.setMapToMode(mcl.BN254);
 }
 
-export function setDomain(domain: string) {
-    DOMAIN = toUtf8Bytes(domain);
+export function validateDomain(domain: Domain) {
+    if (domain.length != 32)
+        throw new BadDomain(`Expect 32 bytes but got ${domain.length}`);
 }
 
-export function setDomainHex(domain: string) {
-    DOMAIN = arrayify(domain);
-    if (DOMAIN.length != 32) {
-        throw new Error("bad domain length");
-    }
-}
-
-export function hashToPoint(msg: string): mclG1 {
-    if (!isHexString(msg)) {
-        throw new Error("message is expected to be hex string");
-    }
+export function hashToPoint(msg: string, domain: Domain): MessagePoint {
+    if (!isHexString(msg))
+        throw new BadMessage(`Expect hex string but got ${msg}`);
 
     const _msg = arrayify(msg);
-    const [e0, e1] = hashToField(DOMAIN, _msg, 2);
+    const [e0, e1] = hashToField(domain, _msg, 2);
     const p0 = mapToPoint(e0);
     const p1 = mapToPoint(e1);
     const p = mcl.add(p0, p1);
@@ -114,82 +108,74 @@ export function g2ToHex(p: mclG2): solG2 {
     return [x0, x1, y0, y1];
 }
 
+export function getPubkey(secret: SecretKey): PublicKey {
+    const pubkey = mcl.mul(g2(), secret);
+    pubkey.normalize();
+    return pubkey;
+}
+
 export function newKeyPair(): keyPair {
     const secret = randFr();
-    const mclPubkey = mcl.mul(g2(), secret);
-    mclPubkey.normalize();
-    const pubkey = g2ToHex(mclPubkey);
+    const pubkey = getPubkey(secret);
     return { pubkey, secret };
 }
 
 export function sign(
     message: string,
-    secret: SecretKey
-): {
-    signature: Signature;
-    M: Message;
-} {
-    const messagePoint = hashToPoint(message);
+    secret: SecretKey,
+    domain: Domain
+): { signature: Signature; messagePoint: MessagePoint } {
+    const messagePoint = hashToPoint(message, domain);
     const signature = mcl.mul(messagePoint, secret);
     signature.normalize();
-    const M = g1ToHex(messagePoint);
-    return { signature, M };
+    return { signature, messagePoint };
 }
 
-export function verify(
-    signature: solG1,
-    pubkey: solG2,
-    message: Message
+export function verifyRaw(
+    signature: Signature,
+    pubkey: PublicKey,
+    message: MessagePoint
 ): boolean {
     const negG2 = new mcl.PrecomputedG2(negativeG2());
-    const messageG1 = parseG1(message);
-    const pubkeyG2 = parseG2(pubkey);
+
     const pairings = mcl.precomputedMillerLoop2mixed(
-        messageG1,
-        pubkeyG2,
+        message,
+        pubkey,
         signature,
         negG2
     );
     return mcl.finalExp(pairings).isOne();
 }
 
-export function verifyMultiple(
-    aggSignature: solG1,
-    pubkeys: solG2[],
-    messages: Message[]
+export function verifyMultipleRaw(
+    aggSignature: Signature,
+    pubkeys: PublicKey[],
+    messages: MessagePoint[]
 ): boolean {
     const size = pubkeys.length;
-    if (size === 0) throw Error("number of public key is zero");
+    if (size === 0) throw new EmptyArray("number of public key is zero");
     if (size != messages.length)
-        throw Error("number of public keys and messages must be equal");
+        throw new MismatchLength(
+            `public keys ${size}; messages ${messages.length}`
+        );
     const negG2 = new mcl.PrecomputedG2(negativeG2());
-    const mclAggSignature = parseG1(aggSignature);
-    let accumulator = mcl.precomputedMillerLoop(mclAggSignature, negG2);
+    let accumulator = mcl.precomputedMillerLoop(aggSignature, negG2);
     for (let i = 0; i < size; i++) {
-        const messageG1 = parseG1(messages[i]);
-        const pubkeyG2 = parseG2(pubkeys[i]);
-        accumulator = mcl.mul(accumulator, mcl.millerLoop(messageG1, pubkeyG2));
+        accumulator = mcl.mul(
+            accumulator,
+            mcl.millerLoop(messages[i], pubkeys[i])
+        );
     }
     return mcl.finalExp(accumulator).isOne();
 }
 
-export function aggreagate(signatures: Signature[]): solG1 {
+export function aggregateRaw(signatures: Signature[]): Signature {
     let aggregated = new mcl.G1();
     for (const sig of signatures) {
         aggregated = mcl.add(aggregated, sig);
     }
     aggregated.normalize();
-    return g1ToHex(aggregated);
-}
-
-export function newG1(): solG1 {
-    const g1 = new mcl.G1();
-    return g1ToHex(g1);
-}
-
-export function newG2(): solG2 {
-    const g2 = new mcl.G2();
-    return g2ToHex(g2);
+    return aggregated;
 }
 
 export function randFr(): mclFR {
@@ -217,6 +203,13 @@ export function randG1(): solG1 {
 
 export function randG2(): solG2 {
     return g2ToHex(randMclG2());
+}
+
+export function parseFr(hex: string) {
+    if (!isHexString(hex)) throw new BadHex(`Expect hex but got ${hex}`);
+    const fr = new mcl.Fr();
+    fr.setHashOf(hex);
+    return fr;
 }
 
 export function parseG1(solG1: solG1): mclG1 {
