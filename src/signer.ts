@@ -73,14 +73,22 @@ export class BlsVerifier {
     }
 }
 
-export class BlsSigner extends BlsVerifier implements BlsSignerInterface {
-    static async getSigner(domain: Domain, secretHex?: string) {
+export class BlsSignerFactory {
+    static async new() {
         await init();
+        return new BlsSignerFactory();
+    }
+    private constructor() {}
+
+    public getSigner(domain: Domain, secretHex?: string) {
         const secret = secretHex ? parseFr(secretHex) : randFr();
         return new BlsSigner(domain, secret);
     }
+}
+
+class BlsSigner extends BlsVerifier implements BlsSignerInterface {
     private _pubkey: PublicKey;
-    private constructor(public domain: Domain, private secret: SecretKey) {
+    constructor(public domain: Domain, private secret: SecretKey) {
         super(domain);
         this._pubkey = getPubkey(secret);
     }

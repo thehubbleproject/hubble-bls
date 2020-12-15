@@ -1,6 +1,6 @@
 import { assert } from "chai";
 import { arrayify, formatBytes32String, keccak256 } from "ethers/lib/utils";
-import { aggregate, BlsSigner } from "../src/signer";
+import { aggregate, BlsSignerFactory } from "../src/signer";
 
 describe("BLS Signer", async () => {
     // Domain is a data that signer and verifier must agree on
@@ -11,10 +11,12 @@ describe("BLS Signer", async () => {
         // message should be a hex string
         const message = formatBytes32String("Hello");
 
+        const factory = await BlsSignerFactory.new();
+
         // A signer can be instantiate with new key pair generated
-        const signer = await BlsSigner.getSigner(DOMAIN);
+        const signer = factory.getSigner(DOMAIN);
         // ... or with an existing secret
-        const signer2 = await BlsSigner.getSigner(DOMAIN, "0xabcd");
+        const signer2 = factory.getSigner(DOMAIN, "0xabcd");
 
         const signature = signer.sign(message);
 
@@ -22,14 +24,15 @@ describe("BLS Signer", async () => {
         assert.isFalse(signer.verify(signature, signer2.pubkey, message));
     });
     it("verify aggregated signature", async function () {
+        const factory = await BlsSignerFactory.new();
         const rawMessages = ["Hello", "how", "are", "you"];
-        const signers: BlsSigner[] = [];
+        const signers = [];
         const messages = [];
         const pubkeys = [];
         const signatures = [];
         for (const raw of rawMessages) {
             const message = formatBytes32String(raw);
-            const signer = await BlsSigner.getSigner(DOMAIN);
+            const signer = factory.getSigner(DOMAIN);
             const signature = signer.sign(message);
             signers.push(signer);
             messages.push(message);
