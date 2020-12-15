@@ -9,4 +9,4 @@ Goal
 
 ## Getting started
 
-See `test/mcl.test.ts` for sample usage.
+See `test/signer.test.ts` for sample usage.
