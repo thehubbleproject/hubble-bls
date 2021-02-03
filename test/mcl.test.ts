@@ -21,6 +21,15 @@ describe("BLS raw API", async () => {
         assert.isTrue(mcl.parseG2(mcl.g2ToHex(mclG2)).isEqual(mclG2));
     });
 
+    it("load and dumps G1", async function () {
+        const solG1 = mcl.g1ToHex(mcl.randMclG1());
+        assert.deepStrictEqual(mcl.loadG1(mcl.dumpG1(solG1)), solG1);
+    });
+    it("load and dumps G2", async function () {
+        const solG2 = mcl.g2ToHex(mcl.randMclG2());
+        assert.deepStrictEqual(mcl.loadG2(mcl.dumpG2(solG2)), solG2);
+    });
+
     it("verify single signature", async function () {
         // mcl.sign takes hex string as input, so the raw string needs to be encoded
         const message = formatBytes32String("Hello");

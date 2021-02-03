@@ -20,6 +20,8 @@ export class BadMessage extends MclError {}
 
 export class BadHex extends MclError {}
 
+export class BadByteLength extends MclError {}
+
 // SignerError
 
 export class NullSigner extends SignerError {}
