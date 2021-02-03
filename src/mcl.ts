@@ -227,6 +227,16 @@ export function parseG2(solG2: solG2): mclG2 {
     return g2;
 }
 
+export function dumpFr(fr: mclFR): string {
+    return `0x${fr.serializeToHexStr()}`;
+}
+
+export function loadFr(hex: string): mclFR {
+    const fr = new mcl.Fr();
+    fr.deserializeHexStr(hex.slice(2));
+    return fr;
+}
+
 export function dumpG1(solG1: solG1): string {
     const [x, y] = solG1;
     return `0x${x.slice(2)}${y.slice(2)}`;
