@@ -14,13 +14,13 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "ethers": "^5.0.24",
-    "mcl-wasm": "^0.4.5"
+    "ethers": "^5.0.28",
+    "mcl-wasm": "^0.7.1"
   },
   "devDependencies": {
     "@types/chai": "^4.2.14",
     "@types/mocha": "^8.2.0",
-    "@types/node": "^14.14.14",
+    "@types/node": "^14.14.22",
     "chai": "^4.2.0",
     "mocha": "^8.2.1",
     "prettier": "^2.2.1",
