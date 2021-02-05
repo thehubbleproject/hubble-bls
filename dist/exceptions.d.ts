@@ -16,5 +16,7 @@ export declare class BadMessage extends MclError {
 }
 export declare class BadHex extends MclError {
 }
+export declare class BadByteLength extends MclError {
+}
 export declare class NullSigner extends SignerError {
 }
