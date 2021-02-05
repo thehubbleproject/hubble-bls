@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMclInstance = exports.parseG2 = exports.parseG1 = exports.parseFr = exports.randG2 = exports.randG1 = exports.randMclG2 = exports.randMclG1 = exports.randFr = exports.aggregateRaw = exports.verifyMultipleRaw = exports.verifyRaw = exports.sign = exports.newKeyPair = exports.getPubkey = exports.g2ToHex = exports.g1ToHex = exports.negativeG2 = exports.g2 = exports.g1 = exports.toBigEndian = exports.mapToPoint = exports.hashToPoint = exports.validateDomain = exports.init = exports.FIELD_ORDER = void 0;
+exports.getMclInstance = exports.loadG2 = exports.loadG1 = exports.dumpG2 = exports.dumpG1 = exports.loadFr = exports.dumpFr = exports.parseG2 = exports.parseG1 = exports.parseFr = exports.randG2 = exports.randG1 = exports.randMclG2 = exports.randMclG1 = exports.randFr = exports.aggregateRaw = exports.verifyMultipleRaw = exports.verifyRaw = exports.sign = exports.newKeyPair = exports.getPubkey = exports.g2ToHex = exports.g1ToHex = exports.negativeG2 = exports.g2 = exports.g1 = exports.toBigEndian = exports.mapToPoint = exports.hashToPoint = exports.validateDomain = exports.init = exports.FIELD_ORDER = void 0;
 const mcl = require("mcl-wasm");
 const ethers_1 = require("ethers");
 const hashToField_1 = require("./hashToField");
@@ -174,6 +174,46 @@ function parseG2(solG2) {
     return g2;
 }
 exports.parseG2 = parseG2;
+function dumpFr(fr) {
+    return `0x${fr.serializeToHexStr()}`;
+}
+exports.dumpFr = dumpFr;
+function loadFr(hex) {
+    const fr = new mcl.Fr();
+    fr.deserializeHexStr(hex.slice(2));
+    return fr;
+}
+exports.loadFr = loadFr;
+function dumpG1(solG1) {
+    const [x, y] = solG1;
+    return `0x${x.slice(2)}${y.slice(2)}`;
+}
+exports.dumpG1 = dumpG1;
+function dumpG2(solG2) {
+    const [x0, x1, y0, y1] = solG2;
+    return `0x${x0.slice(2)}${x1.slice(2)}${y0.slice(2)}${y1.slice(2)}`;
+}
+exports.dumpG2 = dumpG2;
+function loadG1(hex) {
+    const bytesarray = utils_1.arrayify(hex);
+    if (bytesarray.length != 64)
+        throw new exceptions_1.BadByteLength(`Expect length 64 but got ${bytesarray.length}`);
+    const x = utils_1.hexlify(bytesarray.slice(0, 32));
+    const y = utils_1.hexlify(bytesarray.slice(32));
+    return [x, y];
+}
+exports.loadG1 = loadG1;
+function loadG2(hex) {
+    const bytesarray = utils_1.arrayify(hex);
+    if (bytesarray.length != 128)
+        throw new exceptions_1.BadByteLength(`Expect length 128 but got ${bytesarray.length}`);
+    const x0 = utils_1.hexlify(bytesarray.slice(0, 32));
+    const x1 = utils_1.hexlify(bytesarray.slice(32, 64));
+    const y0 = utils_1.hexlify(bytesarray.slice(64, 96));
+    const y1 = utils_1.hexlify(bytesarray.slice(96, 128));
+    return [x0, x1, y0, y1];
+}
+exports.loadG2 = loadG2;
 const getMclInstance = () => mcl;
 exports.getMclInstance = getMclInstance;
 //# sourceMappingURL=mcl.js.map

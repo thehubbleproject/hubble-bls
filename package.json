@@ -1,6 +1,6 @@
 {
   "name": "@thehubbleproject/bls",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,7 +8,9 @@
     "build": "rm -rf dist/ && tsc",
     "test": "mocha -r ts-node/register test/**/*.test.ts",
     "lint": "prettier --check .",
-    "prettier": "prettier --write ."
+    "prettier": "prettier --write .",
+    "preversion": "npm i && npm run prettier && npm test",
+    "version": "npm run build && git add -A dist"
   },
   "homepage": "https://github.com/thehubbleproject/hubble-bls",
   "author": "",
