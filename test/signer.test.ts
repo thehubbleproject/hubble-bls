@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import { arrayify, formatBytes32String, keccak256 } from "ethers/lib/utils";
+import { dumpFr, dumpG2, sign } from "../src/mcl";
 import { aggregate, BlsSignerFactory } from "../src/signer";
 
 describe("BLS Signer", async () => {
@@ -23,6 +24,14 @@ describe("BLS Signer", async () => {
         assert.isTrue(signer.verify(signature, signer.pubkey, message));
         assert.isFalse(signer.verify(signature, signer2.pubkey, message));
     });
+    it.only("dump private key", async function(){
+        const factory = await BlsSignerFactory.new();
+        const secretHex = "0x5566"
+        const signer = factory.getSigner(DOMAIN, secretHex);
+        console.log("secret", dumpFr(signer.secret))
+        console.log(signer.pubkey)
+        console.log(dumpG2(signer.pubkey))
+    })
     it("verify aggregated signature", async function () {
         const factory = await BlsSignerFactory.new();
         const rawMessages = ["Hello", "how", "are", "you"];

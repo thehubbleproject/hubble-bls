@@ -88,7 +88,7 @@ export class BlsSignerFactory {
 
 class BlsSigner extends BlsVerifier implements BlsSignerInterface {
     private _pubkey: PublicKey;
-    constructor(public domain: Domain, private secret: SecretKey) {
+    constructor(public domain: Domain, public secret: SecretKey) {
         super(domain);
         this._pubkey = getPubkey(secret);
     }

@@ -228,7 +228,7 @@ export function parseG2(solG2: solG2): mclG2 {
 }
 
 export function dumpFr(fr: mclFR): string {
-    return `0x${fr.serializeToHexStr()}`;
+    return hexlify( fr.serialize().reverse())
 }
 
 export function loadFr(hex: string): mclFR {
