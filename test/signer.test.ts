@@ -44,4 +44,20 @@ describe("BLS Signer", async () => {
             signers[0].verifyMultiple(aggSignature, pubkeys, messages)
         );
     });
+
+    it("can verify 1,000 times", async () => {
+        // message should be a hex string
+        const message = formatBytes32String("Hello");
+
+        const factory = await BlsSignerFactory.new();
+
+        // A signer can be instantiate with new key pair generated
+        const signer = factory.getSigner(DOMAIN);
+
+        const signature = signer.sign(message);
+
+        for (let i = 0; i < 1000; i++) {
+            assert.isTrue(signer.verify(signature, signer.pubkey, message));
+        }
+    })
 });
