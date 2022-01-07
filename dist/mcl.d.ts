@@ -40,6 +40,7 @@ export declare function randMclG2(): mclG2;
 export declare function randG1(): solG1;
 export declare function randG2(): solG2;
 export declare function parseFr(hex: string): any;
+export declare function setHashFr(hex: string): any;
 export declare function parseG1(solG1: solG1): mclG1;
 export declare function parseG2(solG2: solG2): mclG2;
 export declare function dumpFr(fr: mclFR): string;

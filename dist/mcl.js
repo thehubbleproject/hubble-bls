@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMclInstance = exports.loadG2 = exports.loadG1 = exports.dumpG2 = exports.dumpG1 = exports.loadFr = exports.dumpFr = exports.parseG2 = exports.parseG1 = exports.parseFr = exports.randG2 = exports.randG1 = exports.randMclG2 = exports.randMclG1 = exports.randFr = exports.aggregateRaw = exports.verifyMultipleRaw = exports.verifyRaw = exports.sign = exports.newKeyPair = exports.getPubkey = exports.g2ToHex = exports.g1ToHex = exports.negativeG2 = exports.g2 = exports.g1 = exports.toBigEndian = exports.mapToPoint = exports.hashToPoint = exports.validateDomain = exports.init = exports.FIELD_ORDER = void 0;
+exports.getMclInstance = exports.loadG2 = exports.loadG1 = exports.dumpG2 = exports.dumpG1 = exports.loadFr = exports.dumpFr = exports.parseG2 = exports.parseG1 = exports.setHashFr = exports.parseFr = exports.randG2 = exports.randG1 = exports.randMclG2 = exports.randMclG1 = exports.randFr = exports.aggregateRaw = exports.verifyMultipleRaw = exports.verifyRaw = exports.sign = exports.newKeyPair = exports.getPubkey = exports.g2ToHex = exports.g1ToHex = exports.negativeG2 = exports.g2 = exports.g1 = exports.toBigEndian = exports.mapToPoint = exports.hashToPoint = exports.validateDomain = exports.init = exports.FIELD_ORDER = void 0;
 const mcl = require("mcl-wasm");
 const ethers_1 = require("ethers");
 const hashToField_1 = require("./hashToField");
@@ -99,6 +99,8 @@ exports.sign = sign;
 function verifyRaw(signature, pubkey, message) {
     const negG2 = new mcl.PrecomputedG2(negativeG2());
     const pairings = mcl.precomputedMillerLoop2mixed(message, pubkey, signature, negG2);
+    // call this function to avoid memory leak
+    negG2.destroy();
     return mcl.finalExp(pairings).isOne();
 }
 exports.verifyRaw = verifyRaw;
@@ -113,6 +115,8 @@ function verifyMultipleRaw(aggSignature, pubkeys, messages) {
     for (let i = 0; i < size; i++) {
         accumulator = mcl.mul(accumulator, mcl.millerLoop(messages[i], pubkeys[i]));
     }
+    // call this function to avoid memory leak
+    negG2.destroy();
     return mcl.finalExp(accumulator).isOne();
 }
 exports.verifyMultipleRaw = verifyMultipleRaw;
@@ -156,10 +160,18 @@ function parseFr(hex) {
     if (!utils_1.isHexString(hex))
         throw new exceptions_1.BadHex(`Expect hex but got ${hex}`);
     const fr = new mcl.Fr();
-    fr.setHashOf(hex);
+    fr.setStr(hex);
     return fr;
 }
 exports.parseFr = parseFr;
+function setHashFr(hex) {
+    if (!utils_1.isHexString(hex))
+        throw new exceptions_1.BadHex(`Expect hex but got ${hex}`);
+    const fr = new mcl.Fr();
+    fr.setHashOf(hex);
+    return fr;
+}
+exports.setHashFr = setHashFr;
 function parseG1(solG1) {
     const g1 = new mcl.G1();
     const [x, y] = solG1;
