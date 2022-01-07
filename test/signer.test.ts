@@ -59,5 +59,5 @@ describe("BLS Signer", async () => {
         for (let i = 0; i < 1000; i++) {
             assert.isTrue(signer.verify(signature, signer.pubkey, message));
         }
-    })
+    }).timeout(20000);
 });
