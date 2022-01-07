@@ -209,6 +209,13 @@ export function randG2(): solG2 {
 export function parseFr(hex: string) {
     if (!isHexString(hex)) throw new BadHex(`Expect hex but got ${hex}`);
     const fr = new mcl.Fr();
+    fr.setStr(hex);
+    return fr;
+}
+
+export function setHashFr(hex: string) {
+    if (!isHexString(hex)) throw new BadHex(`Expect hex but got ${hex}`);
+    const fr = new mcl.Fr();
     fr.setHashOf(hex);
     return fr;
 }

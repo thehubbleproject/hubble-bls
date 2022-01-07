@@ -18,6 +18,7 @@ import {
     hashToPoint,
     init,
     parseFr,
+    setHashFr,
 } from "./mcl";
 
 export interface BlsSignerInterface {
@@ -81,7 +82,11 @@ export class BlsSignerFactory {
     private constructor() {}
 
     public getSigner(domain: Domain, secretHex?: string) {
-        const secret = secretHex ? parseFr(secretHex) : randFr();
+        const secret = secretHex
+            ? secretHex.length == 66
+                ? parseFr(secretHex)
+                : setHashFr(secretHex)
+            : randFr();
         return new BlsSigner(domain, secret);
     }
 }
