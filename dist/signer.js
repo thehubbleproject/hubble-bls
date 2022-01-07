@@ -45,7 +45,11 @@ class BlsSignerFactory {
     }
     constructor() { }
     getSigner(domain, secretHex) {
-        const secret = secretHex ? mcl_1.parseFr(secretHex) : mcl_1.randFr();
+        const secret = secretHex
+            ? secretHex.length == 66
+                ? mcl_1.parseFr(secretHex)
+                : mcl_1.setHashFr(secretHex)
+            : mcl_1.randFr();
         return new BlsSigner(domain, secret);
     }
 }
