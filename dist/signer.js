@@ -25,31 +25,31 @@ class BlsVerifier {
         this.domain = domain;
     }
     verify(signature, pubkey, message) {
-        const signatureG1 = mcl_1.parseG1(signature);
-        const pubkeyG2 = mcl_1.parseG2(pubkey);
-        const messagePoint = mcl_1.hashToPoint(message, this.domain);
-        return mcl_1.verifyRaw(signatureG1, pubkeyG2, messagePoint);
+        const signatureG1 = (0, mcl_1.parseG1)(signature);
+        const pubkeyG2 = (0, mcl_1.parseG2)(pubkey);
+        const messagePoint = (0, mcl_1.hashToPoint)(message, this.domain);
+        return (0, mcl_1.verifyRaw)(signatureG1, pubkeyG2, messagePoint);
     }
     verifyMultiple(aggSignature, pubkeys, messages) {
-        const signatureG1 = mcl_1.parseG1(aggSignature);
+        const signatureG1 = (0, mcl_1.parseG1)(aggSignature);
         const pubkeyG2s = pubkeys.map(mcl_1.parseG2);
-        const messagePoints = messages.map((m) => mcl_1.hashToPoint(m, this.domain));
-        return mcl_1.verifyMultipleRaw(signatureG1, pubkeyG2s, messagePoints);
+        const messagePoints = messages.map((m) => (0, mcl_1.hashToPoint)(m, this.domain));
+        return (0, mcl_1.verifyMultipleRaw)(signatureG1, pubkeyG2s, messagePoints);
     }
 }
 exports.BlsVerifier = BlsVerifier;
 class BlsSignerFactory {
     static async new() {
-        await mcl_1.init();
+        await (0, mcl_1.init)();
         return new BlsSignerFactory();
     }
     constructor() { }
     getSigner(domain, secretHex) {
         const secret = secretHex
             ? secretHex.length == 66
-                ? mcl_1.parseFr(secretHex)
-                : mcl_1.setHashFr(secretHex)
-            : mcl_1.randFr();
+                ? (0, mcl_1.parseFr)(secretHex)
+                : (0, mcl_1.setHashFr)(secretHex)
+            : (0, mcl_1.randFr)();
         return new BlsSigner(domain, secret);
     }
 }
@@ -59,20 +59,20 @@ class BlsSigner extends BlsVerifier {
         super(domain);
         this.domain = domain;
         this.secret = secret;
-        this._pubkey = mcl_1.getPubkey(secret);
+        this._pubkey = (0, mcl_1.getPubkey)(secret);
     }
     get pubkey() {
-        return mcl_1.g2ToHex(this._pubkey);
+        return (0, mcl_1.g2ToHex)(this._pubkey);
     }
     sign(message) {
-        const { signature } = mcl_1.sign(message, this.secret, this.domain);
-        return mcl_1.g1ToHex(signature);
+        const { signature } = (0, mcl_1.sign)(message, this.secret, this.domain);
+        return (0, mcl_1.g1ToHex)(signature);
     }
 }
 function aggregate(signatures) {
-    const signatureG1s = signatures.map((s) => mcl_1.parseG1(s));
-    const aggregated = mcl_1.aggregateRaw(signatureG1s);
-    return mcl_1.g1ToHex(aggregated);
+    const signatureG1s = signatures.map((s) => (0, mcl_1.parseG1)(s));
+    const aggregated = (0, mcl_1.aggregateRaw)(signatureG1s);
+    return (0, mcl_1.g1ToHex)(aggregated);
 }
 exports.aggregate = aggregate;
 //# sourceMappingURL=signer.js.map
