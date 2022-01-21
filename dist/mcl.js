@@ -18,10 +18,10 @@ function validateDomain(domain) {
 }
 exports.validateDomain = validateDomain;
 function hashToPoint(msg, domain) {
-    if (!utils_1.isHexString(msg))
+    if (!(0, utils_1.isHexString)(msg))
         throw new exceptions_1.BadMessage(`Expect hex string but got ${msg}`);
-    const _msg = utils_1.arrayify(msg);
-    const [e0, e1] = hashToField_1.hashToField(domain, _msg, 2);
+    const _msg = (0, utils_1.arrayify)(msg);
+    const [e0, e1] = (0, hashToField_1.hashToField)(domain, _msg, 2);
     const p0 = mapToPoint(e0);
     const p1 = mapToPoint(e1);
     const p = mcl.add(p0, p1);
@@ -61,19 +61,19 @@ function negativeG2() {
 exports.negativeG2 = negativeG2;
 function g1ToHex(p) {
     p.normalize();
-    const x = utils_1.hexlify(toBigEndian(p.getX()));
-    const y = utils_1.hexlify(toBigEndian(p.getY()));
+    const x = (0, utils_1.hexlify)(toBigEndian(p.getX()));
+    const y = (0, utils_1.hexlify)(toBigEndian(p.getY()));
     return [x, y];
 }
 exports.g1ToHex = g1ToHex;
 function g2ToHex(p) {
     p.normalize();
     const x = toBigEndian(p.getX());
-    const x0 = utils_1.hexlify(x.slice(32));
-    const x1 = utils_1.hexlify(x.slice(0, 32));
+    const x0 = (0, utils_1.hexlify)(x.slice(32));
+    const x1 = (0, utils_1.hexlify)(x.slice(0, 32));
     const y = toBigEndian(p.getY());
-    const y0 = utils_1.hexlify(y.slice(32));
-    const y1 = utils_1.hexlify(y.slice(0, 32));
+    const y0 = (0, utils_1.hexlify)(y.slice(32));
+    const y1 = (0, utils_1.hexlify)(y.slice(0, 32));
     return [x0, x1, y0, y1];
 }
 exports.g2ToHex = g2ToHex;
@@ -130,7 +130,7 @@ function aggregateRaw(signatures) {
 }
 exports.aggregateRaw = aggregateRaw;
 function randFr() {
-    const r = utils_1.hexlify(utils_1.randomBytes(12));
+    const r = (0, utils_1.hexlify)((0, utils_1.randomBytes)(12));
     let fr = new mcl.Fr();
     fr.setHashOf(r);
     return fr;
@@ -157,7 +157,7 @@ function randG2() {
 }
 exports.randG2 = randG2;
 function parseFr(hex) {
-    if (!utils_1.isHexString(hex))
+    if (!(0, utils_1.isHexString)(hex))
         throw new exceptions_1.BadHex(`Expect hex but got ${hex}`);
     const fr = new mcl.Fr();
     fr.setStr(hex);
@@ -165,7 +165,7 @@ function parseFr(hex) {
 }
 exports.parseFr = parseFr;
 function setHashFr(hex) {
-    if (!utils_1.isHexString(hex))
+    if (!(0, utils_1.isHexString)(hex))
         throw new exceptions_1.BadHex(`Expect hex but got ${hex}`);
     const fr = new mcl.Fr();
     fr.setHashOf(hex);
@@ -207,22 +207,22 @@ function dumpG2(solG2) {
 }
 exports.dumpG2 = dumpG2;
 function loadG1(hex) {
-    const bytesarray = utils_1.arrayify(hex);
+    const bytesarray = (0, utils_1.arrayify)(hex);
     if (bytesarray.length != 64)
         throw new exceptions_1.BadByteLength(`Expect length 64 but got ${bytesarray.length}`);
-    const x = utils_1.hexlify(bytesarray.slice(0, 32));
-    const y = utils_1.hexlify(bytesarray.slice(32));
+    const x = (0, utils_1.hexlify)(bytesarray.slice(0, 32));
+    const y = (0, utils_1.hexlify)(bytesarray.slice(32));
     return [x, y];
 }
 exports.loadG1 = loadG1;
 function loadG2(hex) {
-    const bytesarray = utils_1.arrayify(hex);
+    const bytesarray = (0, utils_1.arrayify)(hex);
     if (bytesarray.length != 128)
         throw new exceptions_1.BadByteLength(`Expect length 128 but got ${bytesarray.length}`);
-    const x0 = utils_1.hexlify(bytesarray.slice(0, 32));
-    const x1 = utils_1.hexlify(bytesarray.slice(32, 64));
-    const y0 = utils_1.hexlify(bytesarray.slice(64, 96));
-    const y1 = utils_1.hexlify(bytesarray.slice(96, 128));
+    const x0 = (0, utils_1.hexlify)(bytesarray.slice(0, 32));
+    const x1 = (0, utils_1.hexlify)(bytesarray.slice(32, 64));
+    const y0 = (0, utils_1.hexlify)(bytesarray.slice(64, 96));
+    const y1 = (0, utils_1.hexlify)(bytesarray.slice(96, 128));
     return [x0, x1, y0, y1];
 }
 exports.loadG2 = loadG2;
