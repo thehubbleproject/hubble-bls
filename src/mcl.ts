@@ -1,4 +1,4 @@
-const mcl = require("mcl-wasm");
+import * as mcl from "mcl-wasm";
 import { BigNumber } from "ethers";
 import { hashToField } from "./hashToField";
 import { arrayify, hexlify, randomBytes, isHexString } from "ethers/lib/utils";
@@ -15,14 +15,10 @@ export const FIELD_ORDER = BigNumber.from(
     "0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47"
 );
 
-export type mclG2 = any;
-export type mclG1 = any;
-export type mclFP = any;
-export type mclFR = any;
-export type SecretKey = mclFR;
-export type MessagePoint = mclG1;
-export type Signature = mclG1;
-export type PublicKey = mclG2;
+export type SecretKey = mcl.Fr;
+export type MessagePoint = mcl.G1;
+export type Signature = mcl.G1;
+export type PublicKey = mcl.G2;
 
 export type solG1 = [string, string];
 export type solG2 = [string, string, string, string];
@@ -37,6 +33,10 @@ export type Domain = Uint8Array;
 export async function init() {
     await mcl.init(mcl.BN_SNARK1);
     mcl.setMapToMode(mcl.BN254);
+}
+
+export function validateHex(hex: string) {
+    if (!isHexString(hex)) throw new BadHex(`Expect hex but got ${hex}`);
 }
 
 export function validateDomain(domain: Domain) {
@@ -57,25 +57,25 @@ export function hashToPoint(msg: string, domain: Domain): MessagePoint {
     return p;
 }
 
-export function mapToPoint(e0: BigNumber): mclG1 {
+export function mapToPoint(e0: BigNumber): mcl.G1 {
     let e1 = new mcl.Fp();
     e1.setStr(e0.mod(FIELD_ORDER).toString());
     return e1.mapToG1();
 }
 
-export function toBigEndian(p: mclFP): Uint8Array {
+export function toBigEndian(p: mcl.Fp | mcl.Fp2): Uint8Array {
     // serialize() gets a little-endian output of Uint8Array
     // reverse() turns it into big-endian, which Solidity likes
     return p.serialize().reverse();
 }
 
-export function g1(): mclG1 {
+export function g1(): mcl.G1 {
     const g1 = new mcl.G1();
     g1.setStr("1 0x01 0x02", 16);
     return g1;
 }
 
-export function g2(): mclG2 {
+export function g2(): mcl.G2 {
     const g2 = new mcl.G2();
     g2.setStr(
         "1 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2 0x12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa 0x090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b"
@@ -83,7 +83,7 @@ export function g2(): mclG2 {
     return g2;
 }
 
-export function negativeG2(): mclG2 {
+export function negativeG2(): mcl.G2 {
     const g2 = new mcl.G2();
     g2.setStr(
         "1 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2 0x1d9befcd05a5323e6da4d435f3b617cdb3af83285c2df711ef39c01571827f9d 0x275dc4a288d1afb3cbb1ac09187524c7db36395df7be3b99e673b13a075a65ec"
@@ -91,14 +91,14 @@ export function negativeG2(): mclG2 {
     return g2;
 }
 
-export function g1ToHex(p: mclG1): solG1 {
+export function g1ToHex(p: mcl.G1): solG1 {
     p.normalize();
     const x = hexlify(toBigEndian(p.getX()));
     const y = hexlify(toBigEndian(p.getY()));
     return [x, y];
 }
 
-export function g2ToHex(p: mclG2): solG2 {
+export function g2ToHex(p: mcl.G2): solG2 {
     p.normalize();
     const x = toBigEndian(p.getX());
     const x0 = hexlify(x.slice(32));
@@ -183,20 +183,20 @@ export function aggregateRaw(signatures: Signature[]): Signature {
     return aggregated;
 }
 
-export function randFr(): mclFR {
+export function randFr(): mcl.Fr {
     const r = hexlify(randomBytes(12));
     let fr = new mcl.Fr();
     fr.setHashOf(r);
     return fr;
 }
 
-export function randMclG1(): mclG1 {
+export function randMclG1(): mcl.G1 {
     const p = mcl.mul(g1(), randFr());
     p.normalize();
     return p;
 }
 
-export function randMclG2(): mclG2 {
+export function randMclG2(): mcl.G2 {
     const p = mcl.mul(g2(), randFr());
     p.normalize();
     return p;
@@ -211,38 +211,38 @@ export function randG2(): solG2 {
 }
 
 export function parseFr(hex: string) {
-    if (!isHexString(hex)) throw new BadHex(`Expect hex but got ${hex}`);
+    validateHex(hex);
     const fr = new mcl.Fr();
     fr.setStr(hex);
     return fr;
 }
 
 export function setHashFr(hex: string) {
-    if (!isHexString(hex)) throw new BadHex(`Expect hex but got ${hex}`);
+    validateHex(hex);
     const fr = new mcl.Fr();
     fr.setHashOf(hex);
     return fr;
 }
 
-export function parseG1(solG1: solG1): mclG1 {
+export function parseG1(solG1: solG1): mcl.G1 {
     const g1 = new mcl.G1();
     const [x, y] = solG1;
     g1.setStr(`1 ${x} ${y}`, 16);
     return g1;
 }
 
-export function parseG2(solG2: solG2): mclG2 {
+export function parseG2(solG2: solG2): mcl.G2 {
     const g2 = new mcl.G2();
     const [x0, x1, y0, y1] = solG2;
     g2.setStr(`1 ${x0} ${x1} ${y0} ${y1}`);
     return g2;
 }
 
-export function dumpFr(fr: mclFR): string {
+export function dumpFr(fr: mcl.Fr): string {
     return `0x${fr.serializeToHexStr()}`;
 }
 
-export function loadFr(hex: string): mclFR {
+export function loadFr(hex: string): mcl.Fr {
     const fr = new mcl.Fr();
     fr.deserializeHexStr(hex.slice(2));
     return fr;

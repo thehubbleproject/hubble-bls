@@ -1,6 +1,7 @@
 import { assert } from "chai";
 import { arrayify, formatBytes32String, keccak256 } from "ethers/lib/utils";
 import { aggregate, BlsSignerFactory } from "../src/signer";
+import { BadHex } from "../src/exceptions";
 
 describe("BLS Signer", async () => {
     // Domain is a data that signer and verifier must agree on
@@ -60,4 +61,38 @@ describe("BLS Signer", async () => {
             assert.isTrue(signer.verify(signature, signer.pubkey, message));
         }
     }).timeout(20000);
+
+    describe("getSigner", () => {
+        const prettyHex = (hex: string): string => {
+            if (hex.length < 11) {
+                return hex;
+            }
+            return `${hex.slice(0, 6)}...${hex.slice(-4)}`;
+        };
+        let factory: BlsSignerFactory;
+
+        before(async () => {
+            factory = await BlsSignerFactory.new();
+        });
+
+        it("fails if secret is not a hex value", () => {
+            assert.throws(() => factory.getSigner(DOMAIN, "abc"), BadHex);
+        });
+
+        [
+            "",
+            "0x0",
+            "0x01",
+            "0x3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1c",
+            "0x2ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cb",
+            "0x3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cb",
+            "0x3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cbb5553de315e0edf504d9150af82dafa5c4667fa618ed0a6f19c69b41166c5510",
+        ].forEach((secret) => {
+            it(`gets a signer for secret "${prettyHex(secret)}" (length ${
+                secret.length
+            })`, () => {
+                assert.isDefined(factory.getSigner(DOMAIN, secret));
+            });
+        });
+    });
 });

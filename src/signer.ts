@@ -82,12 +82,23 @@ export class BlsSignerFactory {
     private constructor() {}
 
     public getSigner(domain: Domain, secretHex?: string) {
-        const secret = secretHex
-            ? secretHex.length == 66
-                ? parseFr(secretHex)
-                : setHashFr(secretHex)
-            : randFr();
+        const secret = this.getSecret(secretHex);
         return new BlsSigner(domain, secret);
+    }
+
+    private getSecret(secretHex?: string) {
+        if (!secretHex) {
+            // Generate a random secret
+            return randFr();
+        }
+
+        try {
+            // Attempt to directly parse the hex
+            return parseFr(secretHex);
+        } catch {
+            // If that fails, hash it
+            return setHashFr(secretHex);
+        }
     }
 }
 
