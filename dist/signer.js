@@ -45,12 +45,22 @@ class BlsSignerFactory {
     }
     constructor() { }
     getSigner(domain, secretHex) {
-        const secret = secretHex
-            ? secretHex.length == 66
-                ? (0, mcl_1.parseFr)(secretHex)
-                : (0, mcl_1.setHashFr)(secretHex)
-            : (0, mcl_1.randFr)();
+        const secret = this.getSecret(secretHex);
         return new BlsSigner(domain, secret);
+    }
+    getSecret(secretHex) {
+        if (!secretHex) {
+            // Generate a random secret
+            return (0, mcl_1.randFr)();
+        }
+        try {
+            // Attempt to directly parse the hex
+            return (0, mcl_1.parseFr)(secretHex);
+        }
+        catch (_a) {
+            // If that fails, hash it
+            return (0, mcl_1.setHashFr)(secretHex);
+        }
     }
 }
 exports.BlsSignerFactory = BlsSignerFactory;
