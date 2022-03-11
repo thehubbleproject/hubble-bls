@@ -22,6 +22,7 @@ export declare class BlsSignerFactory {
     static new(): Promise<BlsSignerFactory>;
     private constructor();
     getSigner(domain: Domain, secretHex?: string): BlsSigner;
+    private getSecret;
 }
 declare class BlsSigner extends BlsVerifier implements BlsSignerInterface {
     domain: Domain;

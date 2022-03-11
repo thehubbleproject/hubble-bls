@@ -1,7 +1,26 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMclInstance = exports.loadG2 = exports.loadG1 = exports.dumpG2 = exports.dumpG1 = exports.loadFr = exports.dumpFr = exports.parseG2 = exports.parseG1 = exports.setHashFr = exports.parseFr = exports.randG2 = exports.randG1 = exports.randMclG2 = exports.randMclG1 = exports.randFr = exports.aggregateRaw = exports.verifyMultipleRaw = exports.verifyRaw = exports.sign = exports.newKeyPair = exports.getPubkey = exports.g2ToHex = exports.g1ToHex = exports.negativeG2 = exports.g2 = exports.g1 = exports.toBigEndian = exports.mapToPoint = exports.hashToPoint = exports.validateDomain = exports.init = exports.FIELD_ORDER = void 0;
-const mcl = require("mcl-wasm");
+exports.getMclInstance = exports.loadG2 = exports.loadG1 = exports.dumpG2 = exports.dumpG1 = exports.loadFr = exports.dumpFr = exports.parseG2 = exports.parseG1 = exports.setHashFr = exports.parseFr = exports.randG2 = exports.randG1 = exports.randMclG2 = exports.randMclG1 = exports.randFr = exports.aggregateRaw = exports.verifyMultipleRaw = exports.verifyRaw = exports.sign = exports.newKeyPair = exports.getPubkey = exports.g2ToHex = exports.g1ToHex = exports.negativeG2 = exports.g2 = exports.g1 = exports.toBigEndian = exports.mapToPoint = exports.hashToPoint = exports.validateDomain = exports.validateHex = exports.init = exports.FIELD_ORDER = void 0;
+const mcl = __importStar(require("mcl-wasm"));
 const ethers_1 = require("ethers");
 const hashToField_1 = require("./hashToField");
 const utils_1 = require("ethers/lib/utils");
@@ -12,6 +31,11 @@ async function init() {
     mcl.setMapToMode(mcl.BN254);
 }
 exports.init = init;
+function validateHex(hex) {
+    if (!(0, utils_1.isHexString)(hex))
+        throw new exceptions_1.BadHex(`Expect hex but got ${hex}`);
+}
+exports.validateHex = validateHex;
 function validateDomain(domain) {
     if (domain.length != 32)
         throw new exceptions_1.BadDomain(`Expect 32 bytes but got ${domain.length}`);
@@ -157,16 +181,14 @@ function randG2() {
 }
 exports.randG2 = randG2;
 function parseFr(hex) {
-    if (!(0, utils_1.isHexString)(hex))
-        throw new exceptions_1.BadHex(`Expect hex but got ${hex}`);
+    validateHex(hex);
     const fr = new mcl.Fr();
     fr.setStr(hex);
     return fr;
 }
 exports.parseFr = parseFr;
 function setHashFr(hex) {
-    if (!(0, utils_1.isHexString)(hex))
-        throw new exceptions_1.BadHex(`Expect hex but got ${hex}`);
+    validateHex(hex);
     const fr = new mcl.Fr();
     fr.setHashOf(hex);
     return fr;
